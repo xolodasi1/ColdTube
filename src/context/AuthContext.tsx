@@ -14,34 +14,46 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  // Try to load user from localStorage for instant UI feedback
+  const [user, setUser] = useState<Models.User<Models.Preferences> | null>(() => {
+    const savedUser = localStorage.getItem('coldtube_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkUserStatus();
 
-    // Re-check status when window gains focus 
-    // (useful when returning from a popup or redirect)
-    const handleFocus = () => {
-      if (!user) checkUserStatus();
-    };
-
+    // Re-check when coming back to tab
+    const handleFocus = () => checkUserStatus();
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user]);
+    
+    // Set an interval to sync session every 30 seconds (just in case)
+    const interval = setInterval(() => checkUserStatus(), 30000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
 
   const checkUserStatus = async (retryCount = 0) => {
     try {
       const sessionUser = await account.get();
       setUser(sessionUser);
+      // Cache user data
+      localStorage.setItem('coldtube_user', JSON.stringify(sessionUser));
     } catch (error: any) {
-      // If we're unauthorized (401) but just returned from Google, 
-      // sometimes a quick retry helps pick up the cookie
-      if (error.code === 401 && retryCount < 1) {
-        setTimeout(() => checkUserStatus(retryCount + 1), 1000);
-        return;
+      // If unauthorized (401), clear cache only if it wasn't a temporary network glitch
+      if (error.code === 401) {
+        if (retryCount < 2) {
+          // Quick retries for race conditions
+          setTimeout(() => checkUserStatus(retryCount + 1), 1500);
+          return;
+        }
+        setUser(null);
+        localStorage.removeItem('coldtube_user');
       }
-      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = () => {
+    // We send user to the current origin. 
+    // Appwrite will redirect back with cookies set.
     const currentOrigin = window.location.origin;
     account.createOAuth2Session(
       OAuthProvider.Google,
@@ -67,8 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await account.deleteSession('current');
+    try {
+      await account.deleteSession('current');
+    } catch (e) {
+      // Ignore if session already gone
+    }
     setUser(null);
+    localStorage.removeItem('coldtube_user');
   };
 
   return (
