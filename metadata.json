@@ -1,0 +1,6 @@
+{
+  "name": "ColdTube",
+  "description": "Аналог YouTube в холодном стиле с интеграцией Appwrite для авторизации и базы данных.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
