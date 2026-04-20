@@ -45,13 +45,13 @@ export default function Upload() {
       setIsUploading(true);
       setError(null);
 
-      // 1. Upload Thumbnail to Cloudinary
-      const thumbUrl = await uploadFileToCloudinary(thumbnailFile, 'image', setThumbnailProgress);
+      // 1. Upload Thumbnail to Cloudinary (use auto to be safer)
+      const thumbUrl = await uploadFileToCloudinary(thumbnailFile, 'auto', setThumbnailProgress);
       
-      // 2. Upload Video to Cloudinary
-      const videoUrl = await uploadFileToCloudinary(videoFile, 'video', setVideoProgress);
+      // 2. Upload Video to Cloudinary (use auto)
+      const videoUrl = await uploadFileToCloudinary(videoFile, 'auto', setVideoProgress);
 
-      // 3. Save to Appwrite Database (If configured)
+      // 3. Save to Appwrite Database
       if (dbId && colId) {
         await databases.createDocument(dbId, colId, ID.unique(), {
           title,
@@ -113,6 +113,14 @@ export default function Upload() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-cold-900 border border-cold-800 rounded-2xl p-6 md:p-8">
+        {/* Debug info - hidden by default unless there's an error */}
+        {error && (
+          <div className="text-[10px] text-slate-600 font-mono break-all mb-2">
+            Debug: Cloud={import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'MISSING'} | 
+            Preset={import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'MISSING'}
+          </div>
+        )}
+        
         {/* Title */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-300">Video Title</label>
