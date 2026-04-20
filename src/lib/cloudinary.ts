@@ -12,13 +12,14 @@ export const uploadFileToCloudinary = (
       return;
     }
 
-    const url = `https://api.cloudinary.com/v1_1/${cloudName.trim()}/${resourceType}/upload`;
-    console.log('Attempting Cloudinary Upload:', { url, uploadPreset: uploadPreset.trim(), resourceType });
+    const url = `https://api.cloudinary.com/v1_1/${cloudName.trim().toLowerCase()}/auto/upload`;
+    console.log('Sending Unsigned Upload to:', url);
     
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset.trim());
+    // Cloudinary standard for unsigned upload only needs these 2 fields!
 
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable && onProgress) {
