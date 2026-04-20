@@ -19,13 +19,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     checkUserStatus();
-  }, []);
 
-  const checkUserStatus = async () => {
+    // Re-check status when window gains focus 
+    // (useful when returning from a popup or redirect)
+    const handleFocus = () => {
+      if (!user) checkUserStatus();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
+
+  const checkUserStatus = async (retryCount = 0) => {
     try {
       const sessionUser = await account.get();
       setUser(sessionUser);
-    } catch (error) {
+    } catch (error: any) {
+      // If we're unauthorized (401) but just returned from Google, 
+      // sometimes a quick retry helps pick up the cookie
+      if (error.code === 401 && retryCount < 1) {
+        setTimeout(() => checkUserStatus(retryCount + 1), 1000);
+        return;
+      }
       setUser(null);
     } finally {
       setIsLoading(false);
