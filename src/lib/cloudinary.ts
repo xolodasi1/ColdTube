@@ -12,11 +12,13 @@ export const uploadFileToCloudinary = (
       return;
     }
 
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${cloudName.trim()}/${resourceType}/upload`;
+    console.log('Attempting Cloudinary Upload:', { url, uploadPreset: uploadPreset.trim(), resourceType });
+    
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
+    formData.append('upload_preset', uploadPreset.trim());
 
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable && onProgress) {
@@ -30,11 +32,19 @@ export const uploadFileToCloudinary = (
         const response = JSON.parse(xhr.responseText);
         resolve(response.secure_url);
       } else {
+        console.error('Cloudinary Upload Error Details:', {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          response: xhr.responseText,
+          cloudName,
+          uploadPreset
+        });
         try {
           const err = JSON.parse(xhr.responseText);
-          reject(new Error(err.error?.message || `Upload failed: ${xhr.statusText}`));
+          const message = err.error?.message || `Upload failed: ${xhr.statusText}`;
+          reject(new Error(`${message} (Status: ${xhr.status})`));
         } catch {
-          reject(new Error(`Upload failed: ${xhr.statusText}`));
+          reject(new Error(`Upload failed: ${xhr.statusText} (${xhr.status})`));
         }
       }
     });

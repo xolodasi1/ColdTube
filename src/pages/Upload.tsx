@@ -60,8 +60,7 @@ export default function Upload() {
           thumbnailUrl: thumbUrl,
           userId: user.$id,
           channelName: user.name,
-          views: 0,
-          createdAt: new Date().toISOString()
+          views: 0
         });
       } else {
         // Just mock success if Appwrite DB isn't configured yet
