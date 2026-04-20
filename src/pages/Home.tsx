@@ -16,7 +16,7 @@ export default function Home() {
 
       try {
         const response = await databases.listDocuments(dbId, colId, [
-          Query.orderDesc('createdAt'),
+          Query.orderDesc('$createdAt'),
           Query.limit(20)
         ]);
         setVideos(response.documents);
@@ -61,18 +61,19 @@ export default function Home() {
         <div className="bg-yellow-500/10 text-yellow-500 p-6 rounded-xl border border-yellow-500/20 max-w-2xl">
           <p className="font-semibold text-lg mb-2">CORS / Network Error</p>
           <p className="text-sm mb-4">
-            Appwrite is blocking the request because this website's domain is not added to your Appwrite Web Platforms. 
+            Appwrite блокирует запрос. Это значит, что твой текущий домен (или домен Vercel) не добавлен в список Web Platforms.
           </p>
           <div className="bg-black/20 p-4 rounded-lg text-left text-xs space-y-2">
-            <p><strong>Как починить:</strong></p>
+            <p><strong>Как быстро починить (разрешить доступ всем сайтам):</strong></p>
             <ol className="list-decimal pl-4 space-y-1">
-              <li>Открой консоль Appwrite (твой проект).</li>
-              <li>Пролистай страницу <strong>Overview</strong> вниз до секции <strong>Platforms</strong>.</li>
+              <li>Открой свою <a href="https://cloud.appwrite.io/console/project-fra-69e4f8980019f8196e7b/overview" target="_blank" rel="noreferrer" className="underline text-blue-400">консоль Appwrite</a>.</li>
+              <li>Пролистай вниз до секции <strong>Platforms</strong>.</li>
               <li>Нажми <strong>Add Platform</strong> и выбери <strong>Web App</strong>.</li>
-              <li>В поле <strong>Name</strong> напиши: <code>ColdTube App</code></li>
-              <li>В поле <strong>Hostname</strong> вставь ровно это: <code>{window.location.hostname}</code></li>
-              <li>Нажимай <strong>Next</strong> (или Register) и всё будет работать!</li>
+              <li>В поле <strong>Name</strong> впиши: <code>All domains</code></li>
+              <li><strong>САМОЕ ГЛАВНОЕ:</strong> В поле <strong>Hostname</strong> вставь ровно один символ: <code>*</code> (просто звездочка).</li>
+              <li>Нажми <strong>Next</strong>.</li>
             </ol>
+            <p className="mt-4 text-gray-400 italic">Звездочка (*) разрешит любому сайту (AI Studio, версель, локалхост) общаться с твоей базой без CORS ошибок.</p>
           </div>
         </div>
       </div>

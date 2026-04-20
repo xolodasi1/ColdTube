@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { account } from '../lib/appwrite';
-import { ID, Models } from 'appwrite';
+import { ID, Models, OAuthProvider } from 'appwrite';
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  loginWithGoogle: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,13 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await login(email, pass);
   };
 
+  const loginWithGoogle = () => {
+    const currentOrigin = window.location.origin;
+    account.createOAuth2Session(
+      OAuthProvider.Google,
+      currentOrigin,
+      `${currentOrigin}/login`
+    );
+  };
+
   const logout = async () => {
     await account.deleteSession('current');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
